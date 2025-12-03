@@ -4,18 +4,10 @@ import busio
 import math
 import adafruit_bme280.advanced as adafruit_bme280
 
-def oblicz_wysokosc(cisnienie_hpa, cisnienie_odniesienia=1013.25):
-    """
-    Oblicza wysokość n.p.m. na podstawie wzoru hipsometrycznego.
-    Wzór: h = 44330 * (1 - (p / p0)^(1/5.255))
-    
-    Argumenty:
-    cisnienie_hpa -- aktualne ciśnienie zmierzone przez czujnik
-    cisnienie_odniesienia -- ciśnienie na poziomie morza (standardowo 1013.25 hPa)
-    """
+def calculatate(pressure_hpa, reference_pressure=1013.25):
     try:
-        wysokosc = 44330 * (1.0 - math.pow(cisnienie_hpa / cisnienie_odniesienia, 0.1903))
-        return wysokosc
+        height = 44330 * (1.0 - math.pow(pressure_hpa / reference_pressure, 0.1903))
+        return height
     except ValueError:
         return 0.0
 
@@ -40,7 +32,7 @@ def main():
             hum = bme280.humidity
             press = bme280.pressure
             
-            altitude_calc = oblicz_wysokosc(press, 1013.25)
+            altitude_calc = calculatate(press, 1013.25)
             
             print("-" * 30)
             print(f"Temperatura: {temp:0.1f} {chr(176)}C")

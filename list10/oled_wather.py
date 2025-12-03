@@ -40,8 +40,6 @@ def main():
     bme280.sea_level_pressure = 1013.25
     bme280.standby_period = adafruit_bme280.STANDBY_TC_500
 
-    print("Rozpoczynanie pomiarów i wyświetlania na OLED...")
-    
     try:
         while True:
             draw.rectangle((0, 0, disp.width, disp.height), outline=0, fill=0)
