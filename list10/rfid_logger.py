@@ -4,25 +4,20 @@ import time
 import datetime
 import RPi.GPIO as GPIO
 import board
-import neopixel
 from mfrc522 import MFRC522
 from config import *
-
-NUM_PIXELS = 8
-ORDER = neopixel.GRB
-pixels = neopixel.NeoPixel(board.D18, NUM_PIXELS, brightness=0.2, auto_write=False)
 
 def feedback_accepted():
     GPIO.output(buzzerPin, 0)
     
-    pixels.fill((0, 255, 0))
-    pixels.show()
-    
-    time.sleep(0.2) 
+    for i in range(4):
+        GPIO.output(led1, True)
+        time.sleep(0.05)
+        GPIO.output(led1, False)
+        time.sleep(0.05)
     
     GPIO.output(buzzerPin, 1) 
-    pixels.fill((0, 0, 0))
-    pixels.show()
+
 
 def rfid_loop():
     MIFAREReader = MFRC522()
@@ -30,39 +25,42 @@ def rfid_loop():
     last_uid = None
     card_present = False
 
-    print("Oczekiwanie na karty RFID... (CTRL+C aby przerwać)")
 
     while True:
         (status_req, TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
         
-        if status_req == MIFAREReader.MI_OK:
+        if status_req == MIFAREReader.MI_OK or card_present:
+            card_present=False
             (status_anti, uid) = MIFAREReader.MFRC522_Anticoll()
-            
+            uid_str = "-".join([str(x) for x in uid])
+            print(uid_str)
             if status_anti == MIFAREReader.MI_OK:
-                if card_present and uid == last_uid:
-                    pass 
+                
+                if uid_str == last_uid:
+                    time.sleep(1)
+                    card_present=True
                 else:
                     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     uid_str = "-".join([str(x) for x in uid])
                     
-                    print(f"[{current_time}] Zarejestrowano kartę UID: {uid_str}")
-                    
+                    print("feedback")
                     feedback_accepted()
                     
-                    last_uid = uid
+                    last_uid = uid_str
                     card_present = True
+                    
+                    
         else:
-            card_present = False
+            print("status not ok")
             last_uid = None
+            card_present=False
 
         time.sleep(0.1)
 
 def main():
     try:
         GPIO.output(buzzerPin, 1)
-        pixels.fill((0, 0, 0))
-        pixels.show()
-        
+        diode1 = GPIO.PWM(led1, 50)
         rfid_loop()
         
     except KeyboardInterrupt:
