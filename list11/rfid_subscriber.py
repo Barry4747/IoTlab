@@ -3,15 +3,13 @@ import json
 import sqlite3
 import os
 
-# --- Configuration ---
 MQTT_BROKER = "localhost"
 MQTT_PORT = 1883
 MQTT_TOPIC = "lab/rfid/access"
 DB_FILE = "access_control.db"
 
-# --- Database Setup ---
+
 def init_db():
-    """Creates the table if it does not exist."""
     try:
         with sqlite3.connect(DB_FILE) as conn:
             cursor = conn.cursor()
@@ -29,7 +27,6 @@ def init_db():
         print(f"Database Error: {e}")
 
 def save_to_db(data):
-    """Inserts the payload data into the SQLite database."""
     try:
         with sqlite3.connect(DB_FILE) as conn:
             cursor = conn.cursor()
@@ -42,7 +39,6 @@ def save_to_db(data):
     except sqlite3.Error as e:
         print(f"Failed to write to DB: {e}")
 
-# --- MQTT Callbacks ---
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print(f"Connected to Broker. Subscribing to {MQTT_TOPIC}")
@@ -52,11 +48,9 @@ def on_connect(client, userdata, flags, rc):
 
 def on_message(client, userdata, msg):
     try:
-        # Decode the JSON payload
         payload_str = msg.payload.decode("utf-8")
         data = json.loads(payload_str)
         
-        # Save to Database
         save_to_db(data)
         
     except json.JSONDecodeError:
@@ -64,9 +58,7 @@ def on_message(client, userdata, msg):
     except Exception as e:
         print(f"Error processing message: {e}")
 
-# --- Main Execution ---
 if __name__ == "__main__":
-    # Ensure DB exists before starting
     init_db()
 
     client = mqtt.Client()
@@ -77,7 +69,6 @@ if __name__ == "__main__":
     
     try:
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
-        # loop_forever handles automatic reconnects
         client.loop_forever()
     except KeyboardInterrupt:
         print("\nDisconnecting...")
